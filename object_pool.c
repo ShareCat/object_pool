@@ -86,3 +86,14 @@ void pool_free_safe(mem_pool_t *pool, void *ptr)
 
     EXIT_CRITICAL();
 }
+
+uint32_t pool_get_free_count(mem_pool_t *pool)
+{
+    uint32_t count = 0;
+    pool_block_t *p = pool->free_list;
+    while (p) {
+        count++;
+        p = p->next;
+    }
+    return count;
+}
