@@ -1,5 +1,9 @@
 #include "object_pool.h"
 
+// 临界区宏定义（以 Cortex-M 为例）
+#define ENTER_CRITICAL()    uint32_t primask = __get_PRIMASK(); __disable_irq()
+#define EXIT_CRITICAL()     __set_PRIMASK(primask)
+
 void pool_init(mem_pool_t *pool, void *mem, size_t block_size, size_t block_count)
 {
     uint8_t *ptr;
@@ -50,4 +54,35 @@ void pool_free(mem_pool_t *pool, void *ptr)
     // 把这个块压回链表头
     block->next = pool->free_list;
     pool->free_list = block;
+}
+
+void* pool_alloc_safe(mem_pool_t *pool)
+{
+    pool_block_t *block;
+
+    ENTER_CRITICAL();
+
+    if (pool->free_list == NULL) {
+        EXIT_CRITICAL();
+        return NULL;
+    }
+
+    block = pool->free_list;
+    pool->free_list = block->next;
+
+    EXIT_CRITICAL();
+
+    return (void *)block;
+}
+
+void pool_free_safe(mem_pool_t *pool, void *ptr)
+{
+    pool_block_t *block = (pool_block_t *)ptr;
+
+    ENTER_CRITICAL();
+
+    block->next = pool->free_list;
+    pool->free_list = block;
+
+    EXIT_CRITICAL();
 }
