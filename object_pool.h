@@ -28,5 +28,6 @@ extern void* pool_alloc(mem_pool_t *pool);
 extern void pool_free(mem_pool_t *pool, void *ptr);
 extern void* pool_alloc_safe(mem_pool_t *pool);
 extern void pool_free_safe(mem_pool_t *pool, void *ptr);
+extern uint32_t pool_get_free_count(mem_pool_t *pool);
 
 #endif
