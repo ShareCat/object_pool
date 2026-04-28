@@ -75,6 +75,7 @@ void* pool_alloc_safe(mem_pool_t *pool)
     return (void *)block;
 }
 
+#if 1
 void pool_free_safe(mem_pool_t *pool, void *ptr)
 {
     pool_block_t *block = (pool_block_t *)ptr;
@@ -86,6 +87,43 @@ void pool_free_safe(mem_pool_t *pool, void *ptr)
 
     EXIT_CRITICAL();
 }
+#else
+/*
+避免重复释放
+netbuf_t *buf = netbuf_alloc();
+// ... 用了一会儿 ...
+netbuf_free(buf);
+// ... 后面又 free 了一次（可能是复制粘贴的 bug）...
+netbuf_free(buf);  // 灾难！
+*/
+
+#define BLOCK_MAGIC_FREE  0xDEADBEEF
+#define BLOCK_MAGIC_USED  0xCAFEBABE
+
+typedef struct pool_block {
+    uint32_t magic;              // 魔数：标记当前状态
+    struct pool_block *next;     // 空闲时有效
+} pool_block_t;
+
+void pool_free_safe(mem_pool_t *pool, void *ptr)
+{
+    pool_block_t *block = (pool_block_t *)ptr;
+
+    // 检查魔数
+    if (block->magic != BLOCK_MAGIC_USED) {
+        // 要么是重复释放，要么是野指针
+        // 可以选择断言、打印错误、或者直接忽略
+        assert(0);
+        return;
+    }
+
+    ENTER_CRITICAL();
+    block->magic = BLOCK_MAGIC_FREE;
+    block->next = pool->free_list;
+    pool->free_list = block;
+    EXIT_CRITICAL();
+}
+#endif
 
 uint32_t pool_get_free_count(mem_pool_t *pool)
 {
