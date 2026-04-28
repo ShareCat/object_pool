@@ -2,9 +2,18 @@
 #define __OBJECT_POOL__
 
 #if 1
+#if 1
 typedef struct pool_block {
     struct pool_block *next;  // 指向下一个空闲块（仅空闲时有效）
 } pool_block_t;
+#else
+// 有些 CPU 对数据访问有对齐要求。比如 ARM Cortex-M 访问 uint32_t 必须 4 字节对齐，访问 double 必须 8 字节对齐。如果你的块大小是奇数（比如 65 字节），而你在块里存了一个 double，就可能触发 HardFault
+// 内存 4 字节对齐
+typedef struct {
+    uint32_t magic;
+    struct pool_block *next;  // 指向下一个空闲块（仅空闲时有效）
+} __attribute__((aligned(4))) pool_block_t;
+#endif
 #else
 typedef union {
     struct {
