@@ -12,4 +12,8 @@ typedef struct {
     size_t        block_count;// 块的总数
 } mem_pool_t;
 
+extern void pool_init(mem_pool_t *pool, void *mem, size_t block_size, size_t block_count);
+extern void* pool_alloc(mem_pool_t *pool);
+extern void pool_free(mem_pool_t *pool, void *ptr);
+
 #endif
