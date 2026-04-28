@@ -26,5 +26,7 @@ typedef struct {
 extern void pool_init(mem_pool_t *pool, void *mem, size_t block_size, size_t block_count);
 extern void* pool_alloc(mem_pool_t *pool);
 extern void pool_free(mem_pool_t *pool, void *ptr);
+extern void* pool_alloc_safe(mem_pool_t *pool);
+extern void pool_free_safe(mem_pool_t *pool, void *ptr);
 
 #endif
