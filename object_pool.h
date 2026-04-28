@@ -1,9 +1,20 @@
 #ifndef __OBJECT_POOL__
 #define __OBJECT_POOL__
 
+#if 1
 typedef struct pool_block {
     struct pool_block *next;  // 指向下一个空闲块（仅空闲时有效）
 } pool_block_t;
+#else
+typedef union {
+    struct {
+        union pool_block *next;  // 空闲时：指向下一个空闲块
+    } free;
+    struct {
+        uint8_t data[1];         // 使用时：用户数据（柔性数组）
+    } used;
+} pool_block_t;
+#endif
 
 typedef struct {
     pool_block_t *free_list;  // 指向空闲链表的头
